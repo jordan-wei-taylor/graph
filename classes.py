@@ -76,8 +76,6 @@ class FCGraph(Graph):
         for i, hidden in enumerate(n_hidden, 1):
             P = self.add_nodes('h', hidden, i, 'hidden', P = P, radius = radius)
         P = self.add_nodes('y', n_output, len(n_hidden) + 1, 'output', P = P, radius = radius)
-
-        self.render         = self._render
         
     def add_nodes(self, base, n, m, node_type = None, P = None, **kwargs):
         bias = self.bias * (base != 'y')
@@ -155,8 +153,6 @@ class GraphicalModel(Graph):
         connection_types = {'normal' : arrow_kwargs}
         
         super().__init__(node_types = node_types, connection_types = connection_types, annot = annot)
-        
-        self.render = self._render
         
     def add_node(self, name, xy, node_type, bold = True, **kwargs):
         label = self._gen_label(name, bold = bold)
