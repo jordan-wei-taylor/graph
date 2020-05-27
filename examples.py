@@ -9,7 +9,7 @@ from classes import FCGraph, GraphicalModel, plt
 g = FCGraph(n_hidden = [4, 4], bias = True)
 g.render()
 
-plt.savefig('examples/fcnn-graph.png')
+plt.savefig('examples/fcnn-graph.png', dpi = 100)
 
 
 # Graphical Model (Gaussian Process)
