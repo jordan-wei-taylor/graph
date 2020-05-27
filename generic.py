@@ -55,7 +55,7 @@ class Graph():
         
     def _gen_label(self, base, *args, bold = True):
         ix = ','.join(map(str, args))
-        return '$\mathbf{' + str(base) + '}_{' + ix + '}$' if bold else f'${base}$'
+        return '$\mathbf{' + str(base) + '}_{' + ix + '}$' if bold else f'${base}_' + '{' + ix + '}$' if ix else f'${base}$'
     
     def _render(self):
         x, y = [[0, 0], [0, 0]]
