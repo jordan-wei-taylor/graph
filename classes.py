@@ -98,7 +98,7 @@ class FCGraph(Graph):
         if bias:
             j    += 1
             name  = f'b-{m}-{j}' if base == 'h' else f'b-{j}'
-            label = self._gen_label('b', m)
+            label = self._gen_label('b', m, bold = False)
             self._add_node(name,
                            (m * self.h_space, self.v_space * (j + (self._m - n - bias) / 2)),
                            node_type = node_type + '_bias',
