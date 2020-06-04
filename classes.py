@@ -1,10 +1,10 @@
-from generic import Graph, plt
+from .generic import Graph, plt
 
-arrow_kwargs  = dict(head_width = 0.2, fc = 'k', length_includes_head = True)
-input_kwargs  = dict(ec = 'k', fc = 'tab:green')
-hidden_kwargs = dict(ec = 'k', fc = 'tab:blue')
-output_kwargs = dict(ec = 'k', fc = 'tab:orange')
-bias_kwargs   = dict(alpha = 0.5, ls = (0, (5, 5)))
+_arrow_kwargs  = dict(head_width = 0.2, fc = 'k', length_includes_head = True)
+_input_kwargs  = dict(ec = 'k', fc = 'tab:green')
+_hidden_kwargs = dict(ec = 'k', fc = 'tab:blue')
+_output_kwargs = dict(ec = 'k', fc = 'tab:orange')
+_bias_kwargs   = dict(alpha = 0.5, ls = (0, (5, 5)))
 
 class FCGraph(Graph):
     """
@@ -51,6 +51,12 @@ class FCGraph(Graph):
         bias_kwargs   : dict
                         Dictionary describint the modifications of how bias units should be drawn using plt.Circle.
                         
+        vertical      : bool
+                        If True, renders a bottom-up visualisation instead of left-right.
+                        
+        labels        : list, str
+                        Should contain three elements describing the input, hidden, and output labels.
+                        
     Methods
     ==================
         add_nodes     : (base, n, m, node_type, P, **kwargs)
@@ -58,8 +64,8 @@ class FCGraph(Graph):
                         `m` describes the hidden index and `P` is used if connecting a previous layer to the current layer.
     """
     def __init__(self, n_input = 3, n_hidden = [3, 3], n_output = 5, v_space = 3, h_space = 5, radius = 1, annot = 20, bias = False,
-                 input_kwargs = input_kwargs, hidden_kwargs = hidden_kwargs, output_kwargs = output_kwargs, arrow_kwargs = arrow_kwargs,
-                 bias_kwargs = bias_kwargs):
+                 input_kwargs = _input_kwargs, hidden_kwargs = _hidden_kwargs, output_kwargs = _output_kwargs, arrow_kwargs = _arrow_kwargs,
+                 bias_kwargs = _bias_kwargs, vertical = False, labels = 'xhy'):
         
         self._set(locals())
         
@@ -70,46 +76,48 @@ class FCGraph(Graph):
         
         super().__init__(node_types = node_types, connection_types = connection_types, annot = annot)
         
-        self._m = m = max([n_input, *n_hidden, n_output])
+        self._m  = max([n_input, *n_hidden, n_output])
+        self.__P = []
         
-        P  = self.add_nodes('x', n_input, 0, 'input', radius = radius)
+        kwargs   = dict(radius = radius, vertical = vertical)
+        self.add_nodes(labels[0], n_input, 0, 'input', **kwargs)
         for i, hidden in enumerate(n_hidden, 1):
-            P = self.add_nodes('h', hidden, i, 'hidden', P = P, radius = radius)
-        P = self.add_nodes('y', n_output, len(n_hidden) + 1, 'output', P = P, radius = radius)
+            self.add_nodes(labels[1], hidden, i, 'hidden', **kwargs)
+        self.add_nodes(labels[2], n_output, len(n_hidden) + 1, 'output', **kwargs)
         
-    def add_nodes(self, base, n, m, node_type = None, P = None, **kwargs):
-        bias = self.bias * (base != 'y')
-        Q    = []
+    def add_nodes(self, base, n, m, node_type = None, **kwargs):
+        bias = self.bias * (base != self.labels[2])
+        P    = []
         for j in range(n):
-            args  = (m, (j + 1)) if base == 'h' else (j + 1,)
-            name  = f'{base}-{m}-{j}' if base == 'h' else f'{base}-{j}'
-            label = self._gen_label(base, *args)
+            args  = (m, (j + 1)) if base == self.labels[1] else (j + 1,)
+            name  = f'{base}-{m}-{j}' if base == self.labels[1] else f'{base}-{j}'
+            label = self._gen_label(base, *args, bold = False)
             self._add_node(name,
                            (m * self.h_space, self.v_space * (j + (self._m - n - bias) / 2)),
                            node_type = node_type,
                            label = label,
                            **kwargs)
-            if P:
-                for p in P:
+            if self.__P:
+                for p in self.__P:
                     self._add_connection(p, name, 'normal')
-            Q.append(name)
+            P.append(name)
         if bias:
             j    += 1
-            name  = f'b-{m}-{j}' if base == 'h' else f'b-{j}'
+            name  = f'b-{m}-{j}' if base == self.labels[1] else f'b-{j}'
             label = self._gen_label('b', m, bold = False)
             self._add_node(name,
                            (m * self.h_space, self.v_space * (j + (self._m - n - bias) / 2)),
                            node_type = node_type + '_bias',
                            label = label,
                            **kwargs)
-            Q.append(name)
-        return Q
+            P.append(name)
+        self.__P = P
     
 
-data_kwargs = dict(ec = 'k', fc = 'silver')
-variable_kwargs = dict(ec = 'k', fc = 'none', ls = (0, (5, 5)))
-function_kwargs = dict(ec = 'k', fc = 'none')
-arrow_kwargs = dict(head_width = 0.2, length_includes_head = True, fc = 'k')
+_data_kwargs = dict(ec = 'k', fc = 'silver')
+_variable_kwargs = dict(ec = 'k', fc = 'none', ls = (0, (5, 5)))
+_function_kwargs = dict(ec = 'k', fc = 'none')
+_arrow_kwargs = dict(head_width = 0.2, length_includes_head = True, fc = 'k')
 
 class GraphicalModel(Graph):
     """
@@ -144,8 +152,8 @@ class GraphicalModel(Graph):
         add_connection  : (A, B, connection_type)
                           Adds a connection from node `A` to node `B`.
     """
-    def __init__(self, data_kwargs = data_kwargs, variable_kwargs = variable_kwargs, function_kwargs = function_kwargs,
-                 arrow_kwargs = arrow_kwargs, radius = 0.8, annot = 20):
+    def __init__(self, data_kwargs = _data_kwargs, variable_kwargs = _variable_kwargs, function_kwargs = _function_kwargs,
+                 arrow_kwargs = _arrow_kwargs, radius = 0.8, annot = 20):
         
         self._set(locals())
         
@@ -157,6 +165,3 @@ class GraphicalModel(Graph):
     def add_node(self, name, xy, node_type, bold = True, **kwargs):
         label = self._gen_label(name, bold = bold)
         self._add_node(name, xy, node_type, radius = self.radius, label = label, **kwargs)
-        
-    def add_connection(self, A, B):
-        self._add_connection(A, B, 'normal')
